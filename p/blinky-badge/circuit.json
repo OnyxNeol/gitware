@@ -1,0 +1,20 @@
+{
+  "name": "blinky-badge",
+  "meta": {
+    "author": "Onyx Tools",
+    "license": "CERN-OHL-S-2.0",
+    "version": "1.0.0"
+  },
+  "parts": [
+    {"ref": "D1", "kind": "led", "value": "red", "footprint": "LED_SMD:LED_0603_1608Metric", "pins": [{"name": "a", "number": "1"}, {"name": "k", "number": "2"}]},
+    {"ref": "J1", "kind": "connector", "value": "USB-C 2.0", "footprint": "Connector_USB:USB_C_Receptacle", "pins": [{"name": "GND", "number": "A1"}, {"name": "VBUS", "number": "A4"}]},
+    {"ref": "R1", "kind": "resistor", "value": "220", "footprint": "Resistor_SMD:R_0603_1608Metric", "pins": [{"name": "a", "number": "1"}, {"name": "b", "number": "2"}]},
+    {"ref": "U1", "kind": "mcu", "value": "ATmega328P", "footprint": "Package_QFP:TQFP-32_7x7mm_P0.8mm", "pins": [{"name": "GND", "number": "3"}, {"name": "VCC", "number": "4"}, {"name": "PB0", "number": "12"}, {"name": "PA1", "number": "31"}, {"name": "PA0", "number": "32"}]}
+  ],
+  "nets": [
+    {"name": "GND", "class": "ground", "nodes": ["D1.k", "J1.GND", "U1.GND"]},
+    {"name": "LED", "class": "signal", "nodes": ["D1.a", "R1.b", "U1.PA0"]},
+    {"name": "SPARE", "class": "signal", "nodes": ["U1.PA1", "U1.PB0"]},
+    {"name": "VCC", "class": "power", "nodes": ["J1.VBUS", "R1.a", "U1.VCC"]}
+  ]
+}
