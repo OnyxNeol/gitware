@@ -1,0 +1,6 @@
+{
+  "machine": "avr",
+  "name": "blinky.wasm",
+  "wasm": "sim/blinky.wasm",
+  "frequency_hz": null
+}
