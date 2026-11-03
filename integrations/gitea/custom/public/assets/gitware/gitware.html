@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hardware · Gitware for Gitea</title>
+<!--
+  Gitea ships its compiled stylesheet at a stable path, so the viewer looks like
+  the instance it lives in (same palette, same fonts, same dark mode) instead of
+  shipping a second theme. If the instance blocks it, the fallbacks in
+  gitware.css still render a usable page.
+-->
+<link rel="stylesheet" href="../../assets/css/index.css" onerror="this.remove()">
+<link rel="stylesheet" href="gitware.css">
+</head>
+<body>
+<main class="gw-page" id="gw-root" aria-live="polite">
+  <header class="gw-header">
+    <span class="gw-repo" id="gw-repo">Hardware</span>
+    <span class="gw-ref" id="gw-ref" hidden></span>
+    <span class="gw-spacer"></span>
+    <a class="gw-link" id="gw-open-pages" hidden target="_blank" rel="noopener">Open published site</a>
+    <a class="gw-link" id="gw-open-source" target="_blank" rel="noopener">Repository</a>
+  </header>
+
+  <div class="gw-grid" id="gw-panels" hidden>
+    <section class="gw-panel" id="gw-board-panel" hidden>
+      <header>PCB
+        <span class="gw-spacer"></span>
+        <span class="gw-ref" id="gw-board-dims"></span>
+      </header>
+      <div class="gw-body">
+        <div class="gw-canvas" id="gw-board"></div>
+        <div class="gw-layers" id="gw-board-layers"></div>
+        <div class="gw-nets" id="gw-board-nets"></div>
+      </div>
+    </section>
+
+    <section class="gw-panel" id="gw-circuit-panel" hidden>
+      <header>Schematic
+        <span class="gw-spacer"></span>
+        <span class="gw-ref" id="gw-circuit-dims"></span>
+      </header>
+      <div class="gw-body">
+        <div class="gw-canvas" id="gw-circuit"></div>
+        <div class="gw-nets" id="gw-circuit-nets"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="gw-panel" id="gw-summary-panel" hidden>
+    <header>Design summary</header>
+    <div class="gw-body">
+      <div class="gw-stats" id="gw-stats"></div>
+      <p class="gw-note" id="gw-firmware" hidden></p>
+    </div>
+  </section>
+
+  <div class="gw-empty" id="gw-empty" hidden></div>
+</main>
+<script type="module" src="gitware-view.js"></script>
+</body>
+</html>
