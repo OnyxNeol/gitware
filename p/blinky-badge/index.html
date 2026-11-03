@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blinky Badge &middot; Gitware Pages</title>
+<meta name="description" content="A two-part blinky badge: ATmega328P, 220 ohm resistor, red LED. Rendered board, diffable schematic and the firmware simulator, all static.">
+<meta name="generator" content="gitware-pages 0.1.0">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <span class="brand"><b>Gitware</b> Pages</span>
+    <span class="badge">blinky-badge.gitware.run.place</span>
+    <span class="spacer"></span>
+    <a href="https://github.com/OnyxNeol/gitware">source</a>
+      <span>CERN-OHL-S-2.0</span>
+      <a href="manifest.json">manifest.json</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>Blinky Badge</h1>
+    <p class="lead">A two-part blinky badge: ATmega328P, 220 ohm resistor, red LED. Rendered board, diffable schematic and the firmware simulator, all static.</p>
+    <p class="url">published from a Git commit &middot; <strong>https://blinky-badge.gitware.run.place</strong></p>
+    <div class="stats">
+      <div class="stat"><span>parts</span><b>4</b></div>
+      <div class="stat"><span>nets</span><b>4</b></div>
+      <div class="stat"><span>layers</span><b>4</b></div>
+      <div class="stat"><span>tracks</span><b>8</b></div>
+      <div class="stat"><span>board</span><b>40.11×30.1</b></div>
+      <div class="stat"><span>machine</span><b>avr</b></div>
+    </div>
+  </div>
+<section id="board">
+  <h2>Board</h2>
+  <figure class="figure">
+    <div class="canvas" data-board-src="board.json"><svg xmlns="http://www.w3.org/2000/svg" viewBox="98.94 98.95 42.11 32.1" width="1200" height="914.7471" data-board="Blinky Badge" data-generator="gitware-board">
+<defs></defs>
+<rect x="98.94" y="98.95" width="42.11" height="32.1" fill="#0b1120"/>
+<g transform="matrix(1 0 0 -1 -98.94 131.05)">
+<g id="layer-B.Cu" data-layer="B.Cu" data-kind="copper" data-side="back" opacity="1">
+<circle cx="118" cy="120" r="0.4" fill="#3b82f6" data-net="GND"/>
+<polygon points="101,101 139,101 139,129 101,129" fill="#3b82f6" data-net="GND"/>
+</g>
+<g id="layer-F.Cu" data-layer="F.Cu" data-kind="copper" data-side="front" opacity="1">
+<line x1="115" y1="115" x2="118" y2="112" stroke="#f59e0b" stroke-width="0.25" stroke-linecap="round" data-net="VCC"/>
+<line x1="128" y1="112" x2="132" y2="112" stroke="#f59e0b" stroke-width="0.25" stroke-linecap="round" data-net="LED"/>
+<line x1="132" y1="112" x2="132" y2="118" stroke="#f59e0b" stroke-width="0.25" stroke-linecap="round" data-net="LED"/>
+<circle cx="118" cy="120" r="0.4" fill="#f59e0b" data-net="GND"/>
+</g>
+<g id="layer-F.SilkS" data-layer="F.SilkS" data-kind="silkscreen" data-side="front" opacity="0.92">
+<line x1="100" y1="115" x2="106" y2="115" stroke="#e2e8f0" stroke-width="0.12" stroke-linecap="round"/>
+</g>
+<g id="layer-Edge.Cuts" data-layer="Edge.Cuts" data-kind="edge-cuts" data-side="front" opacity="1">
+<line x1="100" y1="100" x2="140" y2="100" stroke="#fb7185" stroke-width="0.1" stroke-linecap="round"/>
+<line x1="140" y1="100" x2="140" y2="130" stroke="#fb7185" stroke-width="0.1" stroke-linecap="round"/>
+<line x1="140" y1="130" x2="100" y2="130" stroke="#fb7185" stroke-width="0.1" stroke-linecap="round"/>
+<line x1="100" y1="130" x2="100" y2="100" stroke="#fb7185" stroke-width="0.1" stroke-linecap="round"/>
+</g>
+</g>
+</svg>
+</div>
+    <figcaption>
+      <span>40.11 &times; 30.1 mm</span>
+      <span id="gitware-net-label">click a trace to inspect its net</span>
+      <span class="spacer" style="flex:1"></span>
+      <span>scroll to zoom &middot; drag to pan &middot; double-click to reset</span>
+    </figcaption>
+  </figure>
+  <div class="layers"><button type="button" data-layer-toggle="F.Cu" aria-pressed="false" title="copper layer">F.Cu</button><button type="button" data-layer-toggle="B.Cu" aria-pressed="false" title="copper layer">B.Cu</button><button type="button" data-layer-toggle="F.SilkS" aria-pressed="false" title="silkscreen layer">F.SilkS</button><button type="button" data-layer-toggle="Edge.Cuts" aria-pressed="false" title="edge-cuts layer">Edge.Cuts</button></div>
+</section>
+<section id="schematic">
+  <h2>Schematic &middot; Gitgram</h2>
+  <figure class="figure">
+    <div class="canvas"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 370 228" width="370" height="228" data-circuit="blinky-badge" data-generator="gitware-gitgram">
+<rect width="370" height="228" fill="#0b1120"/>
+<polyline class="net" data-net="VCC" points="340,166 352,166 352,56 18,56 30,56" fill="none" stroke="#f59e0b" stroke-width="1.1" opacity="0.85"/>
+<polyline class="net" data-net="VCC" points="30,56 18,56 18,56 352,56 340,56" fill="none" stroke="#f59e0b" stroke-width="1.1" opacity="0.85"/>
+<polyline class="net" data-net="GND" points="208,166 196,166 196,70 18,70 30,70" fill="none" stroke="#3b82f6" stroke-width="1.1" opacity="0.85"/>
+<polyline class="net" data-net="GND" points="30,70 18,70 18,180 174,180 162,180" fill="none" stroke="#3b82f6" stroke-width="1.1" opacity="0.85"/>
+<polyline class="net" data-net="LED" points="162,56 174,56 174,70 352,70 340,70" fill="none" stroke="#94a3b8" stroke-width="1.1" opacity="0.85"/>
+<polyline class="net" data-net="LED" points="340,70 352,70 352,166 174,166 162,166" fill="none" stroke="#94a3b8" stroke-width="1.1" opacity="0.85"/>
+<polyline class="net" data-net="SPARE" points="162,70 174,70 174,84 174,84 162,84" fill="none" stroke="#94a3b8" stroke-width="1.1" opacity="0.85"/>
+<g class="part" data-ref="U1"><rect x="30" y="30" width="132" height="68" rx="4" fill="#111f38" stroke="#38bdf8" stroke-width="1"/><text x="40" y="46" fill="#e2e8f0" font-size="11" font-weight="600" font-family="ui-monospace, monospace">U1</text><text x="40" y="56" fill="#94a3b8" font-size="9" font-family="ui-monospace, monospace">mcu · ATmega328P</text><line x1="22" y1="56" x2="30" y2="56" stroke="#94a3b8" stroke-width="1"/><text x="19" y="59" fill="#94a3b8" font-size="8" text-anchor="end" font-family="ui-monospace, monospace">VCC</text><line x1="22" y1="70" x2="30" y2="70" stroke="#94a3b8" stroke-width="1"/><text x="19" y="73" fill="#94a3b8" font-size="8" text-anchor="end" font-family="ui-monospace, monospace">GND</text><line x1="162" y1="56" x2="170" y2="56" stroke="#94a3b8" stroke-width="1"/><text x="173" y="59" fill="#94a3b8" font-size="8" text-anchor="start" font-family="ui-monospace, monospace">PA0</text><line x1="162" y1="70" x2="170" y2="70" stroke="#94a3b8" stroke-width="1"/><text x="173" y="73" fill="#94a3b8" font-size="8" text-anchor="start" font-family="ui-monospace, monospace">PA1</text><line x1="162" y1="84" x2="170" y2="84" stroke="#94a3b8" stroke-width="1"/><text x="173" y="87" fill="#94a3b8" font-size="8" text-anchor="start" font-family="ui-monospace, monospace">PB0</text></g>
+<g class="part" data-ref="R1"><rect x="208" y="30" width="132" height="68" rx="4" fill="#111f38" stroke="#38bdf8" stroke-width="1"/><text x="218" y="46" fill="#e2e8f0" font-size="11" font-weight="600" font-family="ui-monospace, monospace">R1</text><text x="218" y="56" fill="#94a3b8" font-size="9" font-family="ui-monospace, monospace">resistor · 220</text><line x1="340" y1="56" x2="348" y2="56" stroke="#94a3b8" stroke-width="1"/><text x="351" y="59" fill="#94a3b8" font-size="8" text-anchor="start" font-family="ui-monospace, monospace">a</text><line x1="340" y1="70" x2="348" y2="70" stroke="#94a3b8" stroke-width="1"/><text x="351" y="73" fill="#94a3b8" font-size="8" text-anchor="start" font-family="ui-monospace, monospace">b</text></g>
+<g class="part" data-ref="D1"><rect x="30" y="140" width="132" height="58" rx="4" fill="#111f38" stroke="#38bdf8" stroke-width="1"/><text x="40" y="156" fill="#e2e8f0" font-size="11" font-weight="600" font-family="ui-monospace, monospace">D1</text><text x="40" y="166" fill="#94a3b8" font-size="9" font-family="ui-monospace, monospace">led · red</text><line x1="162" y1="166" x2="170" y2="166" stroke="#94a3b8" stroke-width="1"/><text x="173" y="169" fill="#94a3b8" font-size="8" text-anchor="start" font-family="ui-monospace, monospace">a</text><line x1="162" y1="180" x2="170" y2="180" stroke="#94a3b8" stroke-width="1"/><text x="173" y="183" fill="#94a3b8" font-size="8" text-anchor="start" font-family="ui-monospace, monospace">k</text></g>
+<g class="part" data-ref="J1"><rect x="208" y="140" width="132" height="58" rx="4" fill="#111f38" stroke="#38bdf8" stroke-width="1"/><text x="218" y="156" fill="#e2e8f0" font-size="11" font-weight="600" font-family="ui-monospace, monospace">J1</text><text x="218" y="166" fill="#94a3b8" font-size="9" font-family="ui-monospace, monospace">connector · USB-C 2.0</text><line x1="200" y1="166" x2="208" y2="166" stroke="#94a3b8" stroke-width="1"/><text x="197" y="169" fill="#94a3b8" font-size="8" text-anchor="end" font-family="ui-monospace, monospace">GND</text><line x1="340" y1="166" x2="348" y2="166" stroke="#94a3b8" stroke-width="1"/><text x="351" y="169" fill="#94a3b8" font-size="8" text-anchor="start" font-family="ui-monospace, monospace">VBUS</text></g>
+</svg>
+</div>
+    <figcaption>
+      <span>text-first source &middot; reviewable in a diff</span>
+      <span class="spacer" style="flex:1"></span>
+      <a href="circuit.json">circuit.json</a>
+    </figcaption>
+  </figure>
+</section>
+<section id="simulation">
+  <h2>Simulation &middot; Super Engine</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>blinky.wasm</h3>
+      <p>Machine <code>avr</code> &middot; runs the firmware in WebAssembly, in the browser, with no server round trip.</p>
+      <p style="margin-top:12px"><button class="primary" id="gitware-run-sim" data-manifest="sim/manifest.json">Run firmware</button></p>
+      <p id="gitware-sim-status" style="margin-top:10px;font-family:var(--mono);font-size:12px"></p>
+    </div>
+    <div class="card">
+      <h3>What runs here</h3>
+      <p>The compiled image is loaded into the Super Engine WASM runtime, which emulates the CPU core, timers and GPIO. Analog co-simulation via ngspice-WASM attaches to the same pin model.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>built by gitware-pages 0.1.0</span>
+    <span>Onyx Tools</span>
+    <span class="spacer"></span>
+    <span>offline-first EDA</span>
+  </div>
+</footer>
+
+<script src="assets/gitware-viewer.js" defer></script>
+</body>
+</html>
