@@ -232,3 +232,54 @@ export function diffLines(before = "", after = "") {
   }
   return rows;
 }
+
+// --- Gitware Cloud ---------------------------------------------------------
+
+/**
+ * The server side, in one base URL.
+ *
+ * A static site cannot list projects, keep a private one private, or hold a
+ * token out of the browser's reach. Both of those live behind these two
+ * functions instead, so the app stays static and still has a backend.
+ */
+export const CLOUD = "https://superagent-d6c4a61b.base44.app/functions";
+
+export const CLOUD_FUNCTIONS = {
+  projects: `${CLOUD}/gitwareProjects`,
+  github: `${CLOUD}/gitwareGithub`,
+};
+
+/** POST to a Gitware Cloud function, returning its parsed JSON body. */
+export async function cloudCall(fn, body) {
+  const url = CLOUD_FUNCTIONS[fn] || fn;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body || {}),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok && payload?.error) {
+    const error = new Error(payload.error);
+    error.status = response.status;
+    throw error;
+  }
+  if (!response.ok) throw new Error(`Cloud answered ${response.status}.`);
+  return payload;
+}
+
+/** A local, unguessable write token. Only its SHA-256 is stored server-side. */
+export function newWriteToken() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** "Blinky Badge · rev C" -> "blinky-badge" */
+export function slugify(title) {
+  return String(title || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+}
