@@ -1,0 +1,26 @@
+{
+  "project": "Blinky Badge",
+  "title": "Blinky Badge",
+  "slug": "blinky-badge",
+  "url": "https://gitware.run.place/p/blinky-badge",
+  "domain_root": "gitware.run.place",
+  "url_mode": "path",
+  "generator": "gitware-pages",
+  "version": "0.1.0",
+  "files": [
+    {"path": ".nojekyll", "bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    {"path": "CNAME", "bytes": 18, "sha256": "e2632c79280983e47b2eaf314611bee2122952d5a622cce2c8fd4de288a1af3f"},
+    {"path": "assets/gitware-viewer.js", "bytes": 11555, "sha256": "42064dc41db360645ac159d54c66aa8f95993b8c31321388c37fae8f37c3de45"},
+    {"path": "assets/site.css", "bytes": 5136, "sha256": "f846e3946766e7d44306988f6599c40288b7622241ff85c4f08d5bc2dcaac13b"},
+    {"path": "board.json", "bytes": 2370, "sha256": "19db56ee8ca005d5fc14e1a733c66bad29311aee749cb3d3e1bb2db2db5acbd5"},
+    {"path": "board.svg", "bytes": 1786, "sha256": "4ebaf6cef2a3766e79944eea2db9e7b60777a291d1f5d77e6249daa7dae0933c"},
+    {"path": "circuit.gitgram", "bytes": 1159, "sha256": "44e3b3133376d9b967779c886b194abc1f25f0ea9ff5a4dbb8765422f32e0d0b"},
+    {"path": "circuit.json", "bytes": 1272, "sha256": "c3f9f4da4ccae0b1e6eaf34506951d7b75cbd6713090a262555e754103160437"},
+    {"path": "circuit.svg", "bytes": 4800, "sha256": "2341a1255a4e423933d86cc9f5d9723507fef41f75eaab20dd60cdf764852cb3"},
+    {"path": "index.html", "bytes": 10474, "sha256": "80fed0ce8b03b9d21dd8e39af0de6179e1c667f6ab946faed307f1b4926df40d"},
+    {"path": "sim/manifest.json", "bytes": 101, "sha256": "60772b48b552c2610b079ce83dc4d3a8969fc1d94e3f9c20bab39c4e50f3dd16"}
+  ],
+  "circuit": {"name": "blinky-badge", "parts": 4, "pins": 11, "nets": 4, "connections": 11},
+  "board": {"name": "Blinky Badge", "layers": 4, "tracks": 8, "pads": 2, "holes": 3, "regions": 1, "width_mm": 40.110, "height_mm": 30.100},
+  "firmware": {"machine": "avr", "name": "blinky.wasm", "wasm": "sim/blinky.wasm"}
+}
