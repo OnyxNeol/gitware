@@ -1,0 +1,28 @@
+{
+  "name": "Blinky Badge",
+  "units": "mm",
+  "background": "#0b1120",
+  "bounds": {"min": {"x": 99.94, "y": 99.95}, "max": {"x": 140.05, "y": 130.05}, "width": 40.11, "height": 30.1},
+  "layers": [
+    {"name": "F.Cu", "kind": "copper", "side": "front", "color": "#f59e0b", "opacity": 1},
+    {"name": "B.Cu", "kind": "copper", "side": "back", "color": "#3b82f6", "opacity": 1},
+    {"name": "F.SilkS", "kind": "silkscreen", "side": "front", "color": "#e2e8f0", "opacity": 0.92},
+    {"name": "Edge.Cuts", "kind": "edge-cuts", "side": "front", "color": "#fb7185", "opacity": 1}
+  ],
+  "primitives": [
+    {"kind": "track", "layer": 3, "start": {"x": 100, "y": 100}, "end": {"x": 140, "y": 100}, "width": 0.1, "net": null},
+    {"kind": "track", "layer": 3, "start": {"x": 140, "y": 100}, "end": {"x": 140, "y": 130}, "width": 0.1, "net": null},
+    {"kind": "track", "layer": 3, "start": {"x": 140, "y": 130}, "end": {"x": 100, "y": 130}, "width": 0.1, "net": null},
+    {"kind": "track", "layer": 3, "start": {"x": 100, "y": 130}, "end": {"x": 100, "y": 100}, "width": 0.1, "net": null},
+    {"kind": "track", "layer": 2, "start": {"x": 100, "y": 115}, "end": {"x": 106, "y": 115}, "width": 0.12, "net": null},
+    {"kind": "hole", "layer": null, "at": {"x": 103, "y": 122}, "diameter": 0.8, "plated": true},
+    {"kind": "hole", "layer": null, "at": {"x": 101, "y": 122}, "diameter": 0.8, "plated": true},
+    {"kind": "track", "layer": 0, "start": {"x": 115, "y": 115}, "end": {"x": 118, "y": 112}, "width": 0.25, "net": "VCC"},
+    {"kind": "track", "layer": 0, "start": {"x": 128, "y": 112}, "end": {"x": 132, "y": 112}, "width": 0.25, "net": "LED"},
+    {"kind": "track", "layer": 0, "start": {"x": 132, "y": 112}, "end": {"x": 132, "y": 118}, "width": 0.25, "net": "LED"},
+    {"kind": "pad", "layer": 0, "at": {"x": 118, "y": 120}, "diameter": 0.8, "shape": {"shape": "circle", "size": {"x": 0.8, "y": 0.8}, "rotation": 0}, "net": "GND"},
+    {"kind": "pad", "layer": 1, "at": {"x": 118, "y": 120}, "diameter": 0.8, "shape": {"shape": "circle", "size": {"x": 0.8, "y": 0.8}, "rotation": 0}, "net": "GND"},
+    {"kind": "hole", "layer": null, "at": {"x": 118, "y": 120}, "diameter": 0.4, "plated": true},
+    {"kind": "region", "layer": 1, "polygon": [{"x": 101, "y": 101}, {"x": 139, "y": 101}, {"x": 139, "y": 129}, {"x": 101, "y": 129}], "net": "GND"}
+  ]
+}
