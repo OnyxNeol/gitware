@@ -13,15 +13,18 @@
 
 import {
   baseDirOf,
+  cloudCall,
   commitUrl,
   commitsUrl,
   describeGitgramSummary,
   diffLines,
+  newWriteToken,
   parseRepoInput,
   rankManifests,
   rawUrl,
   repoLabel,
   repoUrl,
+  slugify,
   summariseGitgramDiff,
   treeUrl,
 } from "./api.js";
@@ -39,6 +42,7 @@ const state = {
   manifestPath: "",
   tab: "pcb",
   cache: new Map(),
+  files: null,
 };
 
 // --- plumbing --------------------------------------------------------------
@@ -66,6 +70,11 @@ function formatBytes(bytes) {
 
 async function getJson(url) {
   if (state.cache.has(url)) return state.cache.get(url);
+  if (state.files?.has(url)) {
+    const parsed = JSON.parse(state.files.get(url));
+    state.cache.set(url, parsed);
+    return parsed;
+  }
   const headers = { Accept: "application/vnd.github+json" };
   if (state.token) headers.Authorization = `Bearer ${state.token}`;
   const response = await fetch(url, { headers });
@@ -92,6 +101,7 @@ async function getJson(url) {
 
 async function getText(url) {
   if (state.cache.has(url)) return state.cache.get(url);
+  if (state.files?.has(url)) return state.files.get(url);
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Could not read ${url} (${response.status}).`);
   const text = await response.text();
@@ -525,6 +535,151 @@ function applyToken(token) {
   if (state.context) openRepository(repoLabel(state.context));
 }
 
+
+// --- Gitware Cloud ---------------------------------------------------------
+
+const CLOUD_TOKEN_KEY = "gitware.cloudtoken";
+
+/** The write token for saved projects. Generated once, never leaves the browser except as a hash. */
+function cloudToken() {
+  let token = localStorage.getItem(CLOUD_TOKEN_KEY);
+  if (!token) {
+    token = newWriteToken();
+    localStorage.setItem(CLOUD_TOKEN_KEY, token);
+  }
+  return token;
+}
+
+/**
+ * Open a project that lives in the backend rather than in a repository.
+ *
+ * The payload is the same set of files a build produces, so everything below
+ * this point renders it exactly like a checked-out project: the PCB, the
+ * schematic, the Gitgram and the file table all read from the snapshot.
+ */
+async function openCloud(slug) {
+  setStatus("Opening saved project...", "busy");
+  state.cache.clear();
+  state.files = new Map();
+  $("gw-tabs").hidden = true;
+  $("gw-view").innerHTML = "";
+
+  try {
+    const result = await cloudCall("projects", { op: "get", slug, token: cloudToken() });
+    const project = result.project || {};
+    const payload = project.payload || {};
+    const names = Object.keys(payload);
+    if (!names.length) throw new Error("That project was saved without file contents.");
+
+    state.context = { owner: "cloud", repo: slug, ref: "" };
+    state.ref = "";
+    state.base = "";
+    state.projects = ["manifest.json"];
+    state.selected = "manifest.json";
+    state.manifestPath = "manifest.json";
+
+    // fileUrl() is the lookup key everywhere else, so store under the same key.
+    for (const name of names) {
+      const value = payload[name];
+      state.files.set(fileUrl(name), typeof value === "string" ? value : JSON.stringify(value));
+    }
+    state.gitgramFiles = names.filter((name) => /\.gitgram(\.txt)?$/i.test(name));
+
+    const manifestText = state.files.get(fileUrl("manifest.json"));
+    if (!manifestText) throw new Error("That project has no manifest.json.");
+    const manifest = JSON.parse(manifestText);
+    if (!Array.isArray(manifest.files)) throw new Error("That manifest has no file list.");
+
+    state.manifest = manifest;
+    $("gw-projects").innerHTML = `<li><button type="button" class="project" aria-current="true">${escapeHtml(project.title || slug)}<span class="path">saved · ${escapeHtml(project.visibility || "public")}</span></button></li>`;
+    $("gw-links").innerHTML = `<li><a href="?cloud=${encodeURIComponent(slug)}" target="_blank" rel="noopener">Permalink</a></li>
+      <li class="mono" style="color:var(--muted)">updated ${escapeHtml(String(project.updated || "").slice(0, 16).replace("T", " "))}</li>`;
+
+    const url = new URL(location.href);
+    url.searchParams.set("cloud", slug);
+    url.searchParams.delete("repo");
+    history.replaceState(null, "", url);
+
+    $("gw-tabs").hidden = false;
+    await renderTab(state.tab);
+    setStatus(`${project.title || slug} · saved copy`);
+  } catch (error) {
+    setStatus("Could not open that project", "bad");
+    $("gw-view").innerHTML = note("Could not open that project", `<div>${escapeHtml(error.message)}</div>`, "bad");
+  }
+}
+
+/** Copy the open build into the backend so it can be reopened without the repository. */
+async function saveCloud() {
+  if (!state.manifest) {
+    setStatus("Nothing to save yet", "bad");
+    return;
+  }
+  const title = state.manifest.project || state.context?.repo || "Untitled board";
+  const slug = slugify(title) || "board";
+  setStatus("Saving to the backend...", "busy");
+
+  try {
+    const payload = { "manifest.json": JSON.stringify(state.manifest) };
+    for (const file of state.manifest.files || []) {
+      try {
+        const isJson = /\.json$/i.test(file.path);
+        payload[file.path] = isJson ? JSON.stringify(await getJson(fileUrl(file.path))) : await getText(fileUrl(file.path));
+      } catch {
+        // A file that will not read is left out; the rest of the project still saves.
+      }
+    }
+
+    const result = await cloudCall("projects", {
+      op: "save",
+      slug,
+      title,
+      description: state.manifest.description || "",
+      visibility: "public",
+      source: state.context?.owner === "cloud" ? "" : repoLabel(state.context || { owner: "", repo: "" }),
+      ref: state.ref,
+      token: cloudToken(),
+      payload,
+    });
+
+    setStatus(`${result.created ? "Saved" : "Updated"} · ${slug}`, "ok");
+    renderCloud();
+  } catch (error) {
+    setStatus("Could not save", "bad");
+    $("gw-view").insertAdjacentHTML(
+      "afterbegin",
+      note("Could not save to the backend", `<div>${escapeHtml(error.message)}</div>`, "bad"),
+    );
+  }
+}
+
+/** The saved-project list, fetched from the backend rather than GitHub. */
+async function renderCloud() {
+  const list = $("gw-cloud");
+  if (!list) return;
+  try {
+    const result = await cloudCall("projects", { op: "list" });
+    const projects = result.projects || [];
+    if (!projects.length) {
+      list.innerHTML = `<li class="mono" style="color:var(--muted)">nothing saved yet</li>`;
+      return;
+    }
+    list.innerHTML = "";
+    for (const project of projects) {
+      const li = document.createElement("li");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "project";
+      button.innerHTML = `${escapeHtml(project.title || project.slug)}<span class="path">${escapeHtml(project.slug)} · ${escapeHtml(formatBytes(project.size_bytes))}</span>`;
+      button.addEventListener("click", () => openCloud(project.slug));
+      li.append(button);
+      list.append(li);
+    }
+  } catch {
+    list.innerHTML = `<li class="mono" style="color:var(--muted)">backend unreachable</li>`;
+  }
+}
+
 // --- boot ------------------------------------------------------------------
 
 function boot() {
@@ -544,6 +699,8 @@ function boot() {
   });
 
   if (state.token) $("gw-token-toggle").textContent = "Sign out";
+  $("gw-save")?.addEventListener("click", saveCloud);
+  renderCloud();
 
   renderTabs();
 
@@ -551,6 +708,14 @@ function boot() {
   const requested = params.get("repo") || "OnyxNeol/gitware";
   const ref = params.get("ref") || "";
   $("gw-repo").value = requested;
+
+  const cloudSlug = params.get("cloud");
+  if (cloudSlug) {
+    $("gw-repo").value = `saved:${cloudSlug}`;
+    openCloud(cloudSlug);
+    return;
+  }
+
   openRepository(ref ? `${requested}${requested.includes("/tree/") ? "" : `/tree/${ref}`}` : requested);
 }
 
