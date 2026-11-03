@@ -230,8 +230,21 @@ async function openRepository(input) {
 
     const tree = await getJson(treeUrl({ ...state.context, ref: state.ref }));
     const paths = (tree.tree || []).map((entry) => entry.path);
-    state.projects = rankManifests(paths);
     state.gitgramFiles = paths.filter((path) => /\.gitgram(\.txt)?$/i.test(path));
+
+    // A repository can contain manifests that are not builds (a simulator
+    // descriptor, for instance). Fetch them once, keep the ones with a file
+    // list, and reuse the parse when a project is opened.
+    const usable = [];
+    for (const path of rankManifests(paths)) {
+      try {
+        const candidate = JSON.parse(await getText(rawUrl({ ...state.context, ref: state.ref, path })));
+        if (Array.isArray(candidate.files) && candidate.files.length) usable.push(path);
+      } catch {
+        // Unreadable manifest: leave it out rather than offering a dead link.
+      }
+    }
+    state.projects = usable;
 
     renderProjects();
 
@@ -443,7 +456,8 @@ async function renderGitgram(view) {
     return;
   }
 
-  const target = files[0];
+  const inProject = files.filter((path) => path.startsWith(state.base || "\u0000"));
+  const target = (inProject.length ? inProject : files)[0];
   const commits = await getJson(commitsUrl({ ...state.context, ref: state.ref, path: target, perPage: 6 }));
   if (!commits.length) {
     view.innerHTML = note("No commits touch this circuit yet", escapeHtml(target));
