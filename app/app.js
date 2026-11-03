@@ -27,7 +27,7 @@ import {
   slugify,
   summariseGitgramDiff,
   treeUrl,
-} from "./api.js?v=3";
+} from "./api.js?v=4";
 
 const $ = (id) => document.getElementById(id);
 const TOKEN_KEY = "gitware.token";
@@ -40,6 +40,7 @@ const state = {
   selected: "",
   manifest: null,
   manifestPath: "",
+  cloudSlug: "",
   tab: "pcb",
   cache: new Map(),
   files: null,
@@ -218,6 +219,7 @@ async function openRepository(input) {
     return;
   }
   state.context = parsed;
+  state.cloudSlug = "";
   state.ref = parsed.ref;
   state.projects = [];
   state.manifest = null;
@@ -468,6 +470,24 @@ async function renderGitgram(view) {
 
   const inProject = files.filter((path) => path.startsWith(state.base || "\u0000"));
   const target = (inProject.length ? inProject : files)[0];
+
+  // A saved project is a snapshot: there are no earlier commits to diff
+  // against, so show the current source and say so plainly.
+  if (state.cloudSlug) {
+    const source = await getText(fileUrl(target));
+    const section = panel(`Gitgram · ${target}`, `<span class="mono">saved snapshot</span>`);
+    const pre = document.createElement("pre");
+    pre.className = "mono";
+    pre.style.cssText = "margin:0;padding:12px;overflow:auto;max-height:58vh;white-space:pre-wrap;font-size:12px;line-height:1.5";
+    pre.textContent = source;
+    section.append(pre);
+    view.append(section);
+    view.insertAdjacentHTML(
+      "beforeend",
+      note("Diffs need the repository", "A saved copy holds the current source, not the history. Open the repository to see what each commit changed."),
+    );
+    return;
+  }
   const commits = await getJson(commitsUrl({ ...state.context, ref: state.ref, path: target, perPage: 6 }));
   if (!commits.length) {
     view.innerHTML = note("No commits touch this circuit yet", escapeHtml(target));
@@ -566,6 +586,7 @@ async function openCloud(slug) {
 
   try {
     const result = await cloudCall("projects", { op: "get", slug, token: cloudToken() });
+    state.cloudSlug = slug;
     const project = result.project || {};
     const payload = project.payload || {};
     const names = Object.keys(payload);
