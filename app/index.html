@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gitware</title>
+<meta name="description" content="Open a hardware repository: PCB, schematic and Gitgram circuit diffs, straight from GitHub.">
+<link rel="stylesheet" href="gitware.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23b45a1f'/%3E%3Cpath d='M4 8h3l1-2h4M4 8h3l1 2h4' stroke='%23fff' stroke-width='1.4' fill='none'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="gw-top">
+  <span class="gw-brand">
+    <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
+      <rect width="16" height="16" rx="3" fill="var(--accent)"></rect>
+      <path d="M4 8h3l1-2h4M4 8h3l1 2h4" stroke="#fff" stroke-width="1.4" fill="none"></path>
+    </svg>
+    Gitware <small>hardware, in the repo</small>
+  </span>
+
+  <form class="gw-repo-form" id="gw-form" autocomplete="off">
+    <input type="text" id="gw-repo" name="repo" placeholder="owner/repo or GitHub URL" spellcheck="false" aria-label="Repository">
+    <button class="primary" type="submit">Open</button>
+  </form>
+
+  <span class="gw-spacer"></span>
+
+  <span class="gw-status" id="gw-status" aria-live="polite">Ready</span>
+  <button class="ghost" id="gw-token-toggle" type="button" title="Raise GitHub's rate limit and open private repositories">Sign in</button>
+
+  <form class="gw-token-row" id="gw-token-form" hidden>
+    <input type="password" id="gw-token" placeholder="GitHub token (read-only is enough)" spellcheck="false" autocomplete="off" aria-label="GitHub token">
+    <button type="submit">Use</button>
+  </form>
+</header>
+
+<div class="gw-shell">
+  <aside class="gw-rail">
+    <h2>Projects</h2>
+    <ul id="gw-projects"><li class="mono" style="color:var(--muted)">none loaded</li></ul>
+    <h2>Repository</h2>
+    <ul id="gw-links"><li class="mono" style="color:var(--muted)">-</li></ul>
+  </aside>
+
+  <main class="gw-main">
+    <div class="gw-tabs" role="tablist" id="gw-tabs" hidden>
+      <button role="tab" data-tab="pcb" aria-selected="true">PCB</button>
+      <button role="tab" data-tab="schematic" aria-selected="false">Schematic</button>
+      <button role="tab" data-tab="gitgram" aria-selected="false">Gitgram diff</button>
+      <button role="tab" data-tab="files" aria-selected="false">Files</button>
+    </div>
+
+    <div id="gw-view"></div>
+  </main>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
