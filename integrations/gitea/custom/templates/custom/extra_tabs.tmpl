@@ -1,0 +1,5 @@
+{{if .Repository}}
+	<a class="item" href="{{AppSubUrl}}/assets/gitware/gitware.html?owner={{.Repository.OwnerName}}&repo={{.Repository.Name}}{{if .RefName}}&ref={{.RefName}}{{end}}" target="_blank" rel="noopener noreferrer" title="PCB, schematic and design summary">
+		{{svg "octicon-cpu" 16}} Hardware
+	</a>
+{{end}}
