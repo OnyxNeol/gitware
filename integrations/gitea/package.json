@@ -1,0 +1,10 @@
+{
+  "name": "gitea-gitware",
+  "private": true,
+  "type": "module",
+  "description": "Gitware EDA views for the Gitea web UI",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:live": "node test/live-viewer.mjs onyx gitware main"
+  }
+}
