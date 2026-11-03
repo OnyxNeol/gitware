@@ -1,0 +1,5 @@
+# The demo instance's database and git repositories are local state,
+# and custom/ is reinstalled from ../custom on every start.
+demo/data/
+demo/custom/
+demo/gitea.log
