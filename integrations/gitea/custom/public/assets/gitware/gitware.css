@@ -1,0 +1,233 @@
+/*
+ * Gitware views for Gitea.
+ *
+ * Colour always comes from Gitea's own design tokens with the values Gitea
+ * ships as fallbacks, so the page follows the instance theme (and its light /
+ * dark switch) without a build step and without a second palette to maintain.
+ */
+
+.gw-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 16px;
+  color: var(--color-text, #212121);
+  font-size: 14px;
+}
+
+.gw-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-secondary, #dededf);
+  border-radius: 4px;
+  background: var(--color-box-header, #fafafa);
+}
+
+.gw-header .gw-repo {
+  font-weight: 600;
+}
+
+.gw-header .gw-ref {
+  font-family: var(--fonts-monospace, monospace);
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--color-secondary, #dededf);
+  color: var(--color-text, #212121);
+}
+
+.gw-spacer {
+  flex: 1 1 auto;
+}
+
+.gw-link {
+  color: var(--color-primary, #4183c4);
+  text-decoration: none;
+}
+
+.gw-link:hover {
+  text-decoration: underline;
+}
+
+.gw-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  margin-top: 16px;
+}
+
+.gw-panel {
+  border: 1px solid var(--color-secondary, #dededf);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--color-box-body, #fff);
+  display: flex;
+  flex-direction: column;
+}
+
+.gw-panel > header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-secondary, #dededf);
+  background: var(--color-box-header, #fafafa);
+}
+
+.gw-panel > .gw-body {
+  padding: 12px;
+  flex: 1 1 auto;
+}
+
+.gw-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 460px;
+  border-radius: 3px;
+  background: #0b1120;
+}
+
+.gw-canvas svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.gw-layers,
+.gw-nets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.gw-chip {
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 3px 9px;
+  border-radius: 12px;
+  border: 1px solid var(--color-secondary, #dededf);
+  background: var(--color-box-body, #fff);
+  color: var(--color-text, #212121);
+  cursor: pointer;
+}
+
+.gw-chip[aria-pressed="true"] {
+  border-color: var(--color-primary, #4183c4);
+  box-shadow: inset 0 0 0 1px var(--color-primary, #4183c4);
+}
+
+.gw-chip[disabled] {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.gw-chip .gw-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.gw-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.gw-stat {
+  padding: 8px 10px;
+  border: 1px solid var(--color-secondary, #dededf);
+  border-radius: 4px;
+}
+
+.gw-stat b {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.gw-stat span {
+  font-size: 12px;
+  color: var(--color-text-light-2, #6a737d);
+}
+
+.gw-note {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--color-primary, #4183c4);
+  background: var(--color-box-header, #fafafa);
+  font-size: 13px;
+}
+
+.gw-empty {
+  margin-top: 16px;
+  padding: 20px;
+  border: 1px dashed var(--color-secondary-dark-2, #c0c0c0);
+  border-radius: 4px;
+  text-align: center;
+  color: var(--color-text-light-2, #6a737d);
+}
+
+.gw-empty code {
+  font-family: var(--fonts-monospace, monospace);
+  background: var(--color-secondary, #dededf);
+  color: var(--color-text, #212121);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.gw-error {
+  border-left: 3px solid var(--color-danger, #d32f2f);
+}
+
+/* Dim everything that is not the selected net, the way EDA tools do. */
+.gw-canvas[data-highlight] [data-net] {
+  opacity: 0.18;
+}
+
+.gw-canvas[data-highlight] [data-net].gw-hit,
+.gw-canvas[data-highlight] [data-net].gw-hit * {
+  opacity: 1;
+}
+
+.gw-canvas g[hidden] {
+  display: none;
+}
+
+/* Diff badge injected next to a .gitgram file in Gitea's commit view. */
+.gw-diff-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 7px;
+  border-radius: 10px;
+  border: 1px solid var(--color-secondary, #dededf);
+  color: var(--color-text-light-2, #6a737d);
+  white-space: nowrap;
+}
+
+.gw-diff-badge .gw-add {
+  color: var(--color-green, #28a745);
+}
+
+.gw-diff-badge .gw-remove {
+  color: var(--color-red, #d32f2f);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gw-chip {
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+  }
+}
