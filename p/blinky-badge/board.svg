@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="98.94 98.95 42.11 32.1" width="1200" height="914.7471" data-board="Blinky Badge" data-generator="gitware-board">
+<defs></defs>
+<rect x="98.94" y="98.95" width="42.11" height="32.1" fill="#0b1120"/>
+<g transform="matrix(1 0 0 -1 -98.94 131.05)">
+<g id="layer-B.Cu" data-layer="B.Cu" data-kind="copper" data-side="back" opacity="1">
+<circle cx="118" cy="120" r="0.4" fill="#3b82f6" data-net="GND"/>
+<polygon points="101,101 139,101 139,129 101,129" fill="#3b82f6" data-net="GND"/>
+</g>
+<g id="layer-F.Cu" data-layer="F.Cu" data-kind="copper" data-side="front" opacity="1">
+<line x1="115" y1="115" x2="118" y2="112" stroke="#f59e0b" stroke-width="0.25" stroke-linecap="round" data-net="VCC"/>
+<line x1="128" y1="112" x2="132" y2="112" stroke="#f59e0b" stroke-width="0.25" stroke-linecap="round" data-net="LED"/>
+<line x1="132" y1="112" x2="132" y2="118" stroke="#f59e0b" stroke-width="0.25" stroke-linecap="round" data-net="LED"/>
+<circle cx="118" cy="120" r="0.4" fill="#f59e0b" data-net="GND"/>
+</g>
+<g id="layer-F.SilkS" data-layer="F.SilkS" data-kind="silkscreen" data-side="front" opacity="0.92">
+<line x1="100" y1="115" x2="106" y2="115" stroke="#e2e8f0" stroke-width="0.12" stroke-linecap="round"/>
+</g>
+<g id="layer-Edge.Cuts" data-layer="Edge.Cuts" data-kind="edge-cuts" data-side="front" opacity="1">
+<line x1="100" y1="100" x2="140" y2="100" stroke="#fb7185" stroke-width="0.1" stroke-linecap="round"/>
+<line x1="140" y1="100" x2="140" y2="130" stroke="#fb7185" stroke-width="0.1" stroke-linecap="round"/>
+<line x1="140" y1="130" x2="100" y2="130" stroke="#fb7185" stroke-width="0.1" stroke-linecap="round"/>
+<line x1="100" y1="130" x2="100" y2="100" stroke="#fb7185" stroke-width="0.1" stroke-linecap="round"/>
+</g>
+</g>
+</svg>
