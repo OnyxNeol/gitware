@@ -30,7 +30,7 @@ import {
   slugify,
   summariseGitgramDiff,
   treeUrl,
-} from "./api.js?v=5";
+} from "./api.js?v=6";
 
 const $ = (id) => document.getElementById(id);
 const TOKEN_KEY = "gitware.token";
@@ -597,85 +597,122 @@ function applyToken(token) {
 }
 
 
-// --- GitHub OAuth ----------------------------------------------------------
+// --- GitHub sign-in (device flow) ------------------------------------------
+//
+// Deliberately secretless: the device flow needs only the app's public client
+// id, so there is no client_secret to store, and no redirect URI to keep in
+// sync. The user reads a short code on screen and types it into GitHub; the
+// browser polls until GitHub approves, and only a session id comes back.
 
-const OAUTH_STATE_KEY = "gitware.oauthstate";
+const DEVICE = { device_code: "", interval: 5000, timer: 0, expires: 0 };
 
-async function oauthConfig() {
+async function deviceConfig() {
   if (state.oauth) return state.oauth;
   try {
-    state.oauth = await cloudCall("oauth", { op: "config" });
+    state.oauth = await cloudCall("device", { op: "config" });
   } catch {
-    state.oauth = { configured: false };
+    state.oauth = { configured: false, client_id: "" };
   }
   return state.oauth;
 }
 
-/** Send the browser to GitHub. Nothing about the token happens here. */
-async function signInWithGithub() {
-  const config = await oauthConfig();
-  if (!config.configured || !config.client_id) {
-    setStatus("GitHub OAuth is not configured yet", "bad");
-    return;
-  }
-  const redirectUri = `${location.origin}${location.pathname}`;
-  const nonce = newWriteToken();
-  sessionStorage.setItem(OAUTH_STATE_KEY, nonce);
-  const target = oauthAuthorizeUrl({
-    clientId: config.client_id,
-    redirectUri,
-    state: nonce,
-    scope: config.scope || "read:user repo",
-  });
-  location.assign(target);
+function showSignIn(html) {
+  $("gw-signin-body").innerHTML = html;
+  $("gw-signin").hidden = false;
 }
 
-/**
- * Handle the redirect back from GitHub.
- *
- * The code is exchanged server-side, so the access token never enters this
- * page; only an opaque session id is stored. Callers are then answered by the
- * proxy, which is what makes private repositories readable.
- */
-async function completeSignIn(params) {
-  const code = params.get("code");
-  const returnedState = params.get("state") || "";
-  const expectedState = sessionStorage.getItem(OAUTH_STATE_KEY) || "";
+function closeSignIn() {
+  clearTimeout(DEVICE.timer);
+  DEVICE.timer = 0;
+  DEVICE.device_code = "";
+  $("gw-signin").hidden = true;
+}
 
-  const url = new URL(location.href);
-  url.searchParams.delete("code");
-  url.searchParams.delete("state");
-  url.searchParams.delete("error");
-  url.searchParams.delete("error_description");
-  history.replaceState(null, "", url);
+/** Open the panel: either the one-time client id step, or the code itself. */
+async function openSignIn() {
+  const config = await deviceConfig();
+  if (!config.configured) {
+    const here = location.origin + location.pathname;
+    showSignIn(`
+      <p>GitHub sign-in runs on the device flow, so no client secret exists anywhere. One public id is needed, once.</p>
+      <ol class="gw-steps">
+        <li>Open <a href="https://github.com/settings/applications/new" target="_blank" rel="noopener">New OAuth App</a></li>
+        <li>Name: <b>Gitware</b>, homepage <code>${escapeHtml(here)}</code></li>
+        <li>Tick <b>Enable Device Flow</b>, then <b>Create</b></li>
+        <li>Paste the <b>Client ID</b> below (it is public, not a secret)</li>
+      </ol>
+      <form id="gw-client-form" class="gw-token-row">
+        <input id="gw-client-id" placeholder="Iv1.0123456789abcdef" spellcheck="false" autocomplete="off" aria-label="GitHub client id">
+        <button class="primary" type="submit">Save</button>
+      </form>
+      <p class="gw-bad" id="gw-client-error" hidden></p>`);
 
-  if (params.get("error")) {
-    setStatus(`GitHub sign-in cancelled: ${params.get("error_description") || params.get("error")}`, "bad");
-    return;
-  }
-  if (!code) return;
-  if (expectedState && returnedState && expectedState !== returnedState) {
-    setStatus("Sign-in state did not match, try again", "bad");
-    return;
-  }
-
-  setStatus("Signing in with GitHub...", "busy");
-  try {
-    const result = await cloudCall("oauth", {
-      op: "exchange",
-      code,
-      redirect_uri: `${location.origin}${location.pathname}`,
+    $("gw-client-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const value = $("gw-client-id").value.trim();
+      try {
+        state.oauth = await cloudCall("device", { op: "save", client_id: value });
+        await startDevice();
+      } catch (error) {
+        const box = $("gw-client-error");
+        box.textContent = error.message;
+        box.hidden = false;
+      }
     });
-    state.session = result.session;
-    state.identity = result;
-    localStorage.setItem(SESSION_KEY, result.session);
-    sessionStorage.removeItem(OAUTH_STATE_KEY);
-    state.cache.clear();
-    renderIdentity();
-    setStatus(`Signed in as ${result.login}`, "ok");
-  } catch (error) {
-    setStatus(`Sign-in failed: ${error.message}`, "bad");
+    return;
   }
+  await startDevice();
+}
+
+async function startDevice() {
+  clearTimeout(DEVICE.timer);
+  showSignIn(`<p>Asking GitHub for a code...</p>`);
+  try {
+    const result = await cloudCall("device", { op: "start" });
+    if (!result.ok) throw new Error(result.error || "GitHub did not answer");
+    DEVICE.device_code = result.device_code;
+    DEVICE.interval = Math.max(5, Number(result.interval) || 5) * 1000;
+    DEVICE.expires = Date.now() + (Number(result.expires_in) || 900) * 1000;
+    showSignIn(`
+      <p>Enter this code on GitHub to approve the sign-in:</p>
+      <p class="gw-code">${escapeHtml(result.user_code)}</p>
+      <p><a class="primary gw-button-link" href="${escapeHtml(result.verification_uri)}" target="_blank" rel="noopener">Open github.com/login/device</a></p>
+      <p class="gw-muted" id="gw-device-status">Waiting for approval...</p>`);
+    // The link stays available in the panel if a popup blocker ate the tab.
+    window.open(result.verification_uri, "_blank", "noopener");
+    pollDevice();
+  } catch (error) {
+    showSignIn(`<p class="gw-bad">${escapeHtml(error.message)}</p>
+      <p class="gw-muted">If this says the device flow is unavailable, tick <b>Enable Device Flow</b> in the OAuth app settings.</p>`);
+  }
+}
+
+async function pollDevice() {
+  if (!DEVICE.device_code) return;
+  if (Date.now() > DEVICE.expires) {
+    showSignIn(`<p class="gw-bad">That code expired. Start again.</p>`);
+    return;
+  }
+  DEVICE.timer = setTimeout(async () => {
+    try {
+      const result = await cloudCall("device", { op: "poll", device_code: DEVICE.device_code });
+      if (result.pending) {
+        pollDevice();
+        return;
+      }
+      state.session = result.session;
+      state.identity = result;
+      localStorage.setItem(SESSION_KEY, result.session);
+      state.cache.clear();
+      renderIdentity();
+      closeSignIn();
+      setStatus(`Signed in as ${result.login}`, "ok");
+      if (state.context && state.context.owner !== "cloud") openRepository(repoLabel(state.context));
+      else if (state.cloudSlug) openCloud(state.cloudSlug);
+    } catch (error) {
+      showSignIn(`<p class="gw-bad">${escapeHtml(error.message)}</p>`);
+    }
+  }, DEVICE.interval);
 }
 
 async function signOut() {
@@ -699,10 +736,7 @@ async function signOut() {
 
 function renderIdentity() {
   const button = $("gw-github");
-  if (button) {
-    button.textContent = state.identity ? `@${state.identity.login}` : "Sign in with GitHub";
-    button.hidden = !state.identity && state.oauth && !state.oauth.configured;
-  }
+  if (button) button.textContent = state.identity ? `@${state.identity.login}` : "Sign in with GitHub";
   const avatar = $("gw-avatar");
   if (avatar) {
     avatar.hidden = !state.identity?.avatar;
@@ -715,7 +749,7 @@ function renderIdentity() {
 
 /** Confirm a stored session is still good, and show who it belongs to. */
 async function refreshIdentity() {
-  await oauthConfig();
+  await deviceConfig();
   if (state.session) {
     try {
       state.identity = await cloudCall("oauth", { op: "whoami", session: state.session });
@@ -895,16 +929,15 @@ function boot() {
   $("gw-save")?.addEventListener("click", saveCloud);
   $("gw-github")?.addEventListener("click", () => {
     if (state.identity) signOut();
-    else signInWithGithub();
+    else openSignIn();
   });
+  $("gw-signin-close")?.addEventListener("click", closeSignIn);
   renderCloud();
   refreshIdentity();
 
   renderTabs();
 
   const params = new URLSearchParams(location.search);
-  if (params.get("code") || params.get("error")) completeSignIn(params);
-
   const requested = params.get("repo") || "OnyxNeol/gitware";
   const ref = params.get("ref") || "";
   $("gw-repo").value = requested;

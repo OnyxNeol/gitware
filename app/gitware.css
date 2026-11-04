@@ -352,3 +352,62 @@ pre.diff span.ctx::before { content: "  "; }
 
 .gw-token-row { display: flex; gap: 6px; flex: 1 1 340px; max-width: 520px; }
 [hidden] { display: none !important; }
+
+
+/* --- sign-in panel ------------------------------------------------------- */
+
+.gw-signin {
+  position: fixed;
+  z-index: 30;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(440px, calc(100vw - 24px));
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+}
+
+.gw-signin > header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.gw-signin-body { padding: 14px 16px 16px; font-size: 13.5px; }
+.gw-signin-body p { margin: 0 0 10px; }
+.gw-signin-body ol.gw-steps { margin: 0 0 12px; padding-left: 18px; }
+.gw-signin-body ol.gw-steps li { margin-bottom: 5px; }
+.gw-signin-body code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; word-break: break-all; }
+
+.gw-code {
+  font-family: var(--mono);
+  font-size: 26px;
+  letter-spacing: 0.16em;
+  text-align: center;
+  padding: 12px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 45%, var(--line));
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent);
+  user-select: all;
+}
+
+a.gw-button-link {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 6px;
+  padding: 7px 12px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+a.gw-button-link:hover { text-decoration: none; filter: brightness(1.05); }
+.gw-muted { color: var(--muted); }
+.gw-bad { color: var(--err); }
