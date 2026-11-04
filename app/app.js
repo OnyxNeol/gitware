@@ -30,7 +30,7 @@ import {
   slugify,
   summariseGitgramDiff,
   treeUrl,
-} from "./api.js?v=6";
+} from "./api.js?v=7";
 
 const $ = (id) => document.getElementById(id);
 const TOKEN_KEY = "gitware.token";
