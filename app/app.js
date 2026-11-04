@@ -14,12 +14,15 @@
 import {
   baseDirOf,
   cloudCall,
+  cloudText,
   commitUrl,
   commitsUrl,
   describeGitgramSummary,
   diffLines,
   newWriteToken,
+  oauthAuthorizeUrl,
   parseRepoInput,
+  proxyRequest,
   rankManifests,
   rawUrl,
   repoLabel,
@@ -27,13 +30,17 @@ import {
   slugify,
   summariseGitgramDiff,
   treeUrl,
-} from "./api.js?v=4";
+} from "./api.js?v=5";
 
 const $ = (id) => document.getElementById(id);
 const TOKEN_KEY = "gitware.token";
+const SESSION_KEY = "gitware.session";
 
 const state = {
   token: localStorage.getItem(TOKEN_KEY) || "",
+  session: localStorage.getItem(SESSION_KEY) || "",
+  identity: null,
+  oauth: null,
   context: null,
   ref: "",
   projects: [],
@@ -69,8 +76,36 @@ function formatBytes(bytes) {
   return `${(n / 1024 / 1024).toFixed(2)} MiB`;
 }
 
+/**
+ * Read a GitHub URL through the backend, as the signed-in user.
+ *
+ * Returns null when there is no OAuth session, or the URL is not one the proxy
+ * understands, which sends the caller back to a direct fetch.
+ */
+async function sessionRead(url) {
+  if (!state.session) return null;
+  const mapped = proxyRequest(url);
+  if (!mapped) return null;
+  try {
+    if (mapped.action === "file") {
+      return { text: await cloudText("github", { ...mapped, session: state.session }) };
+    }
+    const result = await cloudCall("github", { ...mapped, session: state.session });
+    if (!result.ok) return null;
+    return { json: result.data };
+  } catch {
+    return null;
+  }
+}
+
 async function getJson(url) {
   if (state.cache.has(url)) return state.cache.get(url);
+  const proxied = await sessionRead(url);
+  if (proxied) {
+    const value = proxied.json !== undefined ? proxied.json : JSON.parse(proxied.text);
+    state.cache.set(url, value);
+    return value;
+  }
   if (state.files?.has(url)) {
     const parsed = JSON.parse(state.files.get(url));
     state.cache.set(url, parsed);
@@ -102,6 +137,12 @@ async function getJson(url) {
 
 async function getText(url) {
   if (state.cache.has(url)) return state.cache.get(url);
+  const proxied = await sessionRead(url);
+  if (proxied) {
+    const value = proxied.text !== undefined ? proxied.text : JSON.stringify(proxied.json);
+    state.cache.set(url, value);
+    return value;
+  }
   if (state.files?.has(url)) return state.files.get(url);
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Could not read ${url} (${response.status}).`);
@@ -556,6 +597,137 @@ function applyToken(token) {
 }
 
 
+// --- GitHub OAuth ----------------------------------------------------------
+
+const OAUTH_STATE_KEY = "gitware.oauthstate";
+
+async function oauthConfig() {
+  if (state.oauth) return state.oauth;
+  try {
+    state.oauth = await cloudCall("oauth", { op: "config" });
+  } catch {
+    state.oauth = { configured: false };
+  }
+  return state.oauth;
+}
+
+/** Send the browser to GitHub. Nothing about the token happens here. */
+async function signInWithGithub() {
+  const config = await oauthConfig();
+  if (!config.configured || !config.client_id) {
+    setStatus("GitHub OAuth is not configured yet", "bad");
+    return;
+  }
+  const redirectUri = `${location.origin}${location.pathname}`;
+  const nonce = newWriteToken();
+  sessionStorage.setItem(OAUTH_STATE_KEY, nonce);
+  const target = oauthAuthorizeUrl({
+    clientId: config.client_id,
+    redirectUri,
+    state: nonce,
+    scope: config.scope || "read:user repo",
+  });
+  location.assign(target);
+}
+
+/**
+ * Handle the redirect back from GitHub.
+ *
+ * The code is exchanged server-side, so the access token never enters this
+ * page; only an opaque session id is stored. Callers are then answered by the
+ * proxy, which is what makes private repositories readable.
+ */
+async function completeSignIn(params) {
+  const code = params.get("code");
+  const returnedState = params.get("state") || "";
+  const expectedState = sessionStorage.getItem(OAUTH_STATE_KEY) || "";
+
+  const url = new URL(location.href);
+  url.searchParams.delete("code");
+  url.searchParams.delete("state");
+  url.searchParams.delete("error");
+  url.searchParams.delete("error_description");
+  history.replaceState(null, "", url);
+
+  if (params.get("error")) {
+    setStatus(`GitHub sign-in cancelled: ${params.get("error_description") || params.get("error")}`, "bad");
+    return;
+  }
+  if (!code) return;
+  if (expectedState && returnedState && expectedState !== returnedState) {
+    setStatus("Sign-in state did not match, try again", "bad");
+    return;
+  }
+
+  setStatus("Signing in with GitHub...", "busy");
+  try {
+    const result = await cloudCall("oauth", {
+      op: "exchange",
+      code,
+      redirect_uri: `${location.origin}${location.pathname}`,
+    });
+    state.session = result.session;
+    state.identity = result;
+    localStorage.setItem(SESSION_KEY, result.session);
+    sessionStorage.removeItem(OAUTH_STATE_KEY);
+    state.cache.clear();
+    renderIdentity();
+    setStatus(`Signed in as ${result.login}`, "ok");
+  } catch (error) {
+    setStatus(`Sign-in failed: ${error.message}`, "bad");
+  }
+}
+
+async function signOut() {
+  const session = state.session;
+  state.session = "";
+  state.identity = null;
+  localStorage.removeItem(SESSION_KEY);
+  state.cache.clear();
+  renderIdentity();
+  setStatus("Signed out");
+  if (session) {
+    try {
+      await cloudCall("oauth", { op: "signout", session });
+    } catch {
+      // A failed sign-out still clears this browser; the session expires anyway.
+    }
+  }
+  if (state.context && state.context.owner !== "cloud") openRepository(repoLabel(state.context));
+  else if (state.cloudSlug) openCloud(state.cloudSlug);
+}
+
+function renderIdentity() {
+  const button = $("gw-github");
+  if (button) {
+    button.textContent = state.identity ? `@${state.identity.login}` : "Sign in with GitHub";
+    button.hidden = !state.identity && state.oauth && !state.oauth.configured;
+  }
+  const avatar = $("gw-avatar");
+  if (avatar) {
+    avatar.hidden = !state.identity?.avatar;
+    if (state.identity?.avatar) {
+      avatar.src = state.identity.avatar;
+      avatar.alt = state.identity.login;
+    }
+  }
+}
+
+/** Confirm a stored session is still good, and show who it belongs to. */
+async function refreshIdentity() {
+  await oauthConfig();
+  if (state.session) {
+    try {
+      state.identity = await cloudCall("oauth", { op: "whoami", session: state.session });
+    } catch {
+      state.session = "";
+      state.identity = null;
+      localStorage.removeItem(SESSION_KEY);
+    }
+  }
+  renderIdentity();
+}
+
 // --- Gitware Cloud ---------------------------------------------------------
 
 const CLOUD_TOKEN_KEY = "gitware.cloudtoken";
@@ -721,11 +893,18 @@ function boot() {
 
   if (state.token) $("gw-token-toggle").textContent = "Sign out";
   $("gw-save")?.addEventListener("click", saveCloud);
+  $("gw-github")?.addEventListener("click", () => {
+    if (state.identity) signOut();
+    else signInWithGithub();
+  });
   renderCloud();
+  refreshIdentity();
 
   renderTabs();
 
   const params = new URLSearchParams(location.search);
+  if (params.get("code") || params.get("error")) completeSignIn(params);
+
   const requested = params.get("repo") || "OnyxNeol/gitware";
   const ref = params.get("ref") || "";
   $("gw-repo").value = requested;

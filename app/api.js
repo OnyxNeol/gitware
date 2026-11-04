@@ -247,16 +247,21 @@ export const CLOUD = "https://superagent-d6c4a61b.base44.app/functions";
 export const CLOUD_FUNCTIONS = {
   projects: `${CLOUD}/gitwareProjects`,
   github: `${CLOUD}/gitwareGithub`,
+  oauth: `${CLOUD}/githubOauth`,
 };
 
-/** POST to a Gitware Cloud function, returning its parsed JSON body. */
-export async function cloudCall(fn, body) {
+async function post(fn, body) {
   const url = CLOUD_FUNCTIONS[fn] || fn;
-  const response = await fetch(url, {
+  return fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body || {}),
   });
+}
+
+/** POST to a Gitware Cloud function, returning its parsed JSON body. */
+export async function cloudCall(fn, body) {
+  const response = await post(fn, body);
   const payload = await response.json().catch(() => ({}));
   if (!response.ok && payload?.error) {
     const error = new Error(payload.error);
@@ -265,6 +270,13 @@ export async function cloudCall(fn, body) {
   }
   if (!response.ok) throw new Error(`Cloud answered ${response.status}.`);
   return payload;
+}
+
+/** POST and read the body as text, for the proxy's file action. */
+export async function cloudText(fn, body) {
+  const response = await post(fn, body);
+  if (!response.ok) throw new Error(`Cloud answered ${response.status}.`);
+  return response.text();
 }
 
 /** A local, unguessable write token. Only its SHA-256 is stored server-side. */
@@ -282,4 +294,66 @@ export function slugify(title) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 48);
+}
+
+
+// --- OAuth -----------------------------------------------------------------
+
+/**
+ * Where to send the browser for sign-in.
+ *
+ * The client id is public by design; the secret stays in the function. State is
+ * compared on return so a redirect that was not started here is ignored.
+ */
+export function oauthAuthorizeUrl({ clientId, redirectUri, state, scope = "read:user repo" }) {
+  const url = new URL("https://github.com/login/oauth/authorize");
+  url.searchParams.set("client_id", clientId);
+  url.searchParams.set("redirect_uri", redirectUri);
+  url.searchParams.set("scope", scope);
+  url.searchParams.set("state", state);
+  url.searchParams.set("allow_signup", "true");
+  return url.toString();
+}
+
+/**
+ * Turn a GitHub REST or raw URL into a request for the proxy function.
+ *
+ * Returns null for anything unrecognised, which is the signal to fetch it
+ * directly instead of routing it through the backend.
+ */
+export function proxyRequest(url) {
+  let parsed;
+  try {
+    parsed = new URL(String(url));
+  } catch {
+    return null;
+  }
+  const parts = parsed.pathname.split("/").filter(Boolean).map(decodeURIComponent);
+
+  if (parsed.hostname === "api.github.com") {
+    if (parts[0] !== "repos" || parts.length < 3) return null;
+    const repo = `${parts[1]}/${parts[2]}`;
+    if (parts[3] === "git" && parts[4] === "trees" && parts[5]) {
+      return { action: "tree", repo, ref: parts.slice(5).join("/") };
+    }
+    if (parts[3] === "commits" && parts.length === 4) {
+      const ref = parsed.searchParams.get("sha") || "";
+      const limit = Number(parsed.searchParams.get("per_page") || 20);
+      return { action: "commits", repo, ...(ref ? { ref } : {}), limit };
+    }
+    if (parts.length === 3) return { action: "repo", repo };
+    return null;
+  }
+
+  if (parsed.hostname === "raw.githubusercontent.com" && parts.length >= 4) {
+    // /owner/repo/ref/path... where ref may itself be encoded with slashes.
+    return {
+      action: "file",
+      repo: `${parts[0]}/${parts[1]}`,
+      ref: parts[2],
+      path: parts.slice(3).join("/"),
+    };
+  }
+
+  return null;
 }
